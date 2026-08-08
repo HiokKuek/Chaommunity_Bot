@@ -112,6 +112,31 @@ class GoogleSheetsScoreStore:
         )
         return {"changed": True}
 
+    async def reset_all_scores(self, game_master, command):
+        scores = self.api.get_values(self.spreadsheet_id, "Scores!A1:J7")
+        audit = self.api.get_values(self.spreadsheet_id, "Audit!A2:H")
+        first_score_column = _header_index(scores[0], "GameA")
+        last_score_column = _header_index(scores[0], "Bonus Mission")
+        changed = any(
+            _value_at(scores, row_index, column_index)
+            for row_index in range(1, len(scores))
+            for column_index in range(first_score_column, last_score_column + 1)
+        )
+        if not changed:
+            return {"changed": False}
+        reset_values = [[0 for _ in range(first_score_column, last_score_column + 1)] for _ in scores[1:7]]
+        self.api.batch_update_values(
+            self.spreadsheet_id,
+            [
+                {
+                    "range": f"Scores!{_a1_column(first_score_column + 1)}2:{_a1_column(last_score_column + 1)}7",
+                    "values": reset_values,
+                },
+                _audit_entry(audit, self.clock(), "ALL", "All Scores Reset", "", "", game_master, command),
+            ],
+        )
+        return {"changed": True}
+
     async def leaderboard(self):
         scores = self.api.get_values(self.spreadsheet_id, "Scores!A1:J7")
         headers = scores[0]

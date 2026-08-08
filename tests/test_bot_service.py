@@ -5,11 +5,9 @@ from orientation_bot.service import BotService, IncomingMessage
 
 SCORE_HELP_MESSAGE = (
     "❗ <b>Invalid score command</b>\n"
-    "Please use:\n"
-    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
-    "──────────\n"
-    "<b>Example:</b>\n"
-    "/score G1 GameA 10\n"
+    "<b>To update score after completing a game</b>\n"
+    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "Usage: /score G1 GameA 10\n"
     "──────────\n"
     "<b>Games:</b>\n"
     "GameA: Teochew Speed Drawing\n"
@@ -21,38 +19,47 @@ SCORE_HELP_MESSAGE = (
 )
 
 MISSION_HELP_MESSAGE = (
-    "🕵️ <b>Mission commands</b>\n"
-    "/secret &lt;group&gt; — mark the group's own secret mission as complete\n"
-    "/bonus &lt;group&gt; — add 8 bonus points after /secret\n"
-    "/bonus remove &lt;group&gt; — remove 8 bonus points\n"
+    "🕵️ <b>Mission guide</b>\n\n"
+    "<b>To update score after completing a secret mission</b>\n"
+    "Command: /secret &lt;group&gt;\n"
+    "Usage: /secret G1\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
     "──────────\n"
-    "<b>Examples:</b>\n"
-    "/secret G1\n"
-    "/bonus G1\n"
+    "<b>To update score after completing a bonus mission</b>\n"
+    "Command: /bonus &lt;group&gt;\n"
+    "Usage: /bonus G1\n"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
     "──────────\n"
-    "<b>Rule:</b> A group must finish its own secret mission before bonus missions count."
+    "<b>To remove 1 bonus mission by mistake</b>\n"
+    "Command: /bonus remove &lt;group&gt;\n"
+    "Usage: /bonus remove G1\n"
+    "──────────\n"
+    "<b>Misc</b>\n"
+    "Reset mission score: /resetmissions"
 )
 
 HELP_MESSAGE = (
-    "📝 <b>Score and mission guide</b>\n\n"
-    "<b>Game scores:</b>\n"
-    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
-    "<b>Example:</b> /score G1 GameA 10\n"
+    "📝 <b>Command guide</b>\n\n"
+    "<b>Title 1: Update scores</b>\n\n"
+    "<b>To update score after completing a game</b>\n"
+    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "Usage: /score G1 GameA 10\n"
+    "Games: GameA, GameB, GameC, GameD, GameE, GameF\n"
     "──────────\n"
-    "<b>Games:</b>\n"
-    "GameA: Teochew Speed Drawing\n"
-    "GameB: Connect Four Relay\n"
-    "GameC: Unlock the Code\n"
-    "GameD: The Photo Quest\n"
-    "GameE: Minefield\n"
-    "GameF: Qiaopi: The Missing Letter\n"
+    "<b>To update score after completing a secret mission</b>\n"
+    "Command: /secret &lt;group&gt;\n"
+    "Usage: /secret G1\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
     "──────────\n"
-    "<b>Missions:</b>\n"
-    "/secret &lt;group&gt;\n"
-    "/bonus &lt;group&gt;\n"
-    "/bonus remove &lt;group&gt;\n"
-    "/resetmissions\n"
-    "<b>Rule:</b> /bonus only works after /secret."
+    "<b>To update score after completing a bonus mission</b>\n"
+    "Command: /bonus &lt;group&gt;\n"
+    "Usage: /bonus G1\n"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
+    "To remove 1 bonus by mistake: /bonus remove G1\n"
+    "──────────\n"
+    "<b>Title 2: Misc</b>\n\n"
+    "Reset mission score: /resetmissions\n"
+    "Reset entire score: /resetscores"
 )
 
 
@@ -310,6 +317,48 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             publisher.messages,
         )
 
+    async def test_resetscores_clears_all_game_and_mission_scores(self):
+        score_store = MemoryScoreStore()
+        publisher = RecordingPublisher()
+        bot = BotService(score_store, publisher, game_master_chat_id=-1001, announcement_chat_id=-1002)
+
+        await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 GameA 8"))
+        await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/secret G1"))
+        await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus G1"))
+        publisher.messages.clear()
+
+        reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/resetscores"))
+
+        self.assertEqual(
+            "✅ <b>All scores reset!</b>\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups.",
+            reply,
+        )
+        self.assertEqual(0, score_store.score_for("G1", "GameA"))
+        self.assertEqual(0, score_store.secret_points_for("G1"))
+        self.assertEqual(0, score_store.bonus_points_for("G1"))
+        self.assertEqual(
+            [
+                {
+                    "chat_id": -1002,
+                    "html": "🧹 <b>All scores reset</b>\n\nGame, Secret Mission, and Bonus Mission scores have been cleared for all groups.",
+                    "pin": False,
+                },
+                {
+                    "chat_id": -1002,
+                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 0\n🥇 G2: 0\n🥇 G3: 0\n🥇 G4: 0\n🥇 G5: 0\n🥇 G6: 0",
+                    "pin": True,
+                },
+            ],
+            publisher.messages,
+        )
+
+    async def test_help_command_shows_descriptive_sections(self):
+        bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
+
+        reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/help"))
+
+        self.assertEqual(HELP_MESSAGE, reply)
+
     async def test_direct_messages_receive_the_access_instruction(self):
         score_store = MemoryScoreStore()
         publisher = RecordingPublisher()
@@ -490,6 +539,13 @@ class MemoryScoreStore:
 
     async def reset_missions(self, game_master, command):
         changed = any(self.secret_points.values()) or any(self.bonus_points.values())
+        self.secret_points = {group: 0 for group in self.secret_points}
+        self.bonus_points = {group: 0 for group in self.bonus_points}
+        return {"changed": changed}
+
+    async def reset_all_scores(self, game_master, command):
+        changed = bool(self.scores) or any(self.secret_points.values()) or any(self.bonus_points.values())
+        self.scores = {}
         self.secret_points = {group: 0 for group in self.secret_points}
         self.bonus_points = {group: 0 for group in self.bonus_points}
         return {"changed": changed}

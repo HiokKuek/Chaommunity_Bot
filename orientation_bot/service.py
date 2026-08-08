@@ -14,42 +14,54 @@ GAMES = tuple(GAME_DETAILS)
 GAME_LISTING = "\n".join(f"{game}: {details['name']}" for game, details in GAME_DETAILS.items())
 SCORE_HELP_MESSAGE = (
     "❗ <b>Invalid score command</b>\n"
-    "Please use:\n"
-    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
-    "──────────\n"
-    "<b>Example:</b>\n"
-    "/score G1 GameA 10\n"
+    "<b>To update score after completing a game</b>\n"
+    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "Usage: /score G1 GameA 10\n"
     "──────────\n"
     "<b>Games:</b>\n"
     f"{GAME_LISTING}"
 )
 MISSION_HELP_MESSAGE = (
-    "🕵️ <b>Mission commands</b>\n"
-    "/secret &lt;group&gt; — mark the group's own secret mission as complete\n"
-    "/bonus &lt;group&gt; — add 8 bonus points after /secret\n"
-    "/bonus remove &lt;group&gt; — remove 8 bonus points\n"
+    "🕵️ <b>Mission guide</b>\n\n"
+    "<b>To update score after completing a secret mission</b>\n"
+    "Command: /secret &lt;group&gt;\n"
+    "Usage: /secret G1\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
     "──────────\n"
-    "<b>Examples:</b>\n"
-    "/secret G1\n"
-    "/bonus G1\n"
+    "<b>To update score after completing a bonus mission</b>\n"
+    "Command: /bonus &lt;group&gt;\n"
+    "Usage: /bonus G1\n"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
     "──────────\n"
-    "<b>Rule:</b> A group must finish its own secret mission before bonus missions count."
+    "<b>To remove 1 bonus mission by mistake</b>\n"
+    "Command: /bonus remove &lt;group&gt;\n"
+    "Usage: /bonus remove G1\n"
+    "──────────\n"
+    "<b>Misc</b>\n"
+    "Reset mission score: /resetmissions"
 )
 HELP_MESSAGE = (
-    "📝 <b>Score and mission guide</b>\n\n"
-    "<b>Game scores:</b>\n"
-    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
-    "<b>Example:</b> /score G1 GameA 10\n"
+    "📝 <b>Command guide</b>\n\n"
+    "<b>Title 1: Update scores</b>\n\n"
+    "<b>To update score after completing a game</b>\n"
+    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "Usage: /score G1 GameA 10\n"
+    "Games: GameA, GameB, GameC, GameD, GameE, GameF\n"
     "──────────\n"
-    "<b>Games:</b>\n"
-    f"{GAME_LISTING}\n"
+    "<b>To update score after completing a secret mission</b>\n"
+    "Command: /secret &lt;group&gt;\n"
+    "Usage: /secret G1\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
     "──────────\n"
-    "<b>Missions:</b>\n"
-    "/secret &lt;group&gt;\n"
-    "/bonus &lt;group&gt;\n"
-    "/bonus remove &lt;group&gt;\n"
-    "/resetmissions\n"
-    "<b>Rule:</b> /bonus only works after /secret."
+    "<b>To update score after completing a bonus mission</b>\n"
+    "Command: /bonus &lt;group&gt;\n"
+    "Usage: /bonus G1\n"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
+    "To remove 1 bonus by mistake: /bonus remove G1\n"
+    "──────────\n"
+    "<b>Title 2: Misc</b>\n\n"
+    "Reset mission score: /resetmissions\n"
+    "Reset entire score: /resetscores"
 )
 
 
@@ -103,6 +115,21 @@ class BotService:
             await self.publisher.publish(self.announcement_chat_id, _missions_reset_announcement(), pin=False)
             await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
             return "✅ <b>Mission scores reset!</b>\nAll Secret Mission and Bonus Mission scores are now 0."
+
+        if text == "/resetscores":
+            try:
+                result = await self.score_store.reset_all_scores(
+                    game_master={"id": message.sender_id, "name": message.sender_name},
+                    command=message.text,
+                )
+                standings = await self.score_store.leaderboard()
+            except Exception:
+                return "Could not update Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
+            if not result["changed"]:
+                return "ℹ️ <b>No change</b>\nAll game, Secret Mission, and Bonus Mission scores are already 0."
+            await self.publisher.publish(self.announcement_chat_id, _all_scores_reset_announcement(), pin=False)
+            await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
+            return "✅ <b>All scores reset!</b>\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups."
 
         command = _parse_score_command(text)
         if command is not None:
@@ -345,6 +372,13 @@ def _missions_reset_announcement():
     return (
         "🧹 <b>Mission scores reset</b>\n\n"
         "Secret Mission and Bonus Mission scores have been cleared for all groups."
+    )
+
+
+def _all_scores_reset_announcement():
+    return (
+        "🧹 <b>All scores reset</b>\n\n"
+        "Game, Secret Mission, and Bonus Mission scores have been cleared for all groups."
     )
 
 

@@ -8,6 +8,7 @@ The bot is designed for one private Game Master group and one announcement chann
 
 - Records a score with `/score G1 GameA 8`.
 - Records secret-mission completions with `/secret G1` and bonus-mission updates with `/bonus G1` or `/bonus remove G1`.
+- Resets mission-only scores with `/resetmissions` and resets all game + mission scores with `/resetscores`.
 - Accepts groups `G1`–`G6`, games `GameA`–`GameF`, and whole-number scores from 1 to 10.
 - Automatically awards Secret Mission points in completion order: `10, 9, 8, 7, 6, 5`.
 - Only allows Bonus Mission points after that group's own Secret Mission is complete; each `/bonus` adds `8` points.
@@ -90,7 +91,7 @@ docker start orientation-score-bot
 
 ## Using the bot
 
-In the Game Master group, type `/` or use Telegram's command-menu button to see the available commands:
+In the Game Master group, type `/` or use Telegram's command-menu button to see the available commands. `/help` now shows a descriptive guide grouped into score updates and misc commands:
 
 ```text
 /help
@@ -100,11 +101,14 @@ In the Game Master group, type `/` or use Telegram's command-menu button to see 
 /bonus G1
 /bonus remove G1
 /resetmissions
+/resetscores
 ```
 
 `/secret` marks a group's own Secret Mission as complete and automatically assigns the next available score from `10, 9, 8, 7, 6, 5`.
 
 `/bonus` adds `8` Bonus Mission points after that group has completed `/secret`. `/bonus remove` subtracts one `8`-point step if a Game Master records too many bonus missions.
+
+`/resetmissions` clears only `Secret Mission` and `Bonus Mission` columns. `/resetscores` clears every game score plus both mission columns for all groups.
 
 In a group, Telegram may address a command to the bot. These forms work too:
 

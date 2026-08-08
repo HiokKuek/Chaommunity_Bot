@@ -18,8 +18,9 @@ class TelegramGateway:
             {"command": "secret", "description": "Record a secret mission: /secret G1"},
             {"command": "bonus", "description": "Add or remove a bonus mission: /bonus G1"},
             {"command": "resetmissions", "description": "Reset all Secret Mission and Bonus Mission scores"},
+            {"command": "resetscores", "description": "Reset all game, Secret Mission, and Bonus Mission scores"},
             {"command": "leaderboard", "description": "Show the current leaderboard"},
-            {"command": "help", "description": "Show score and mission help"},
+            {"command": "help", "description": "Show the descriptive command guide"},
         ]})
 
     def username(self):

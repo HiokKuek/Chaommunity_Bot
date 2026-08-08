@@ -166,6 +166,45 @@ class GoogleSheetsScoreStoreTests(unittest.IsolatedAsyncioTestCase):
             api.writes,
         )
 
+    async def test_reset_all_scores_clears_games_and_missions(self):
+        api = FakeSheetsApi(scores=[
+            ["Group", "GameA", "GameB", "GameC", "GameD", "GameE", "GameF", "Secret Mission", "Bonus Mission", "Total"],
+            ["G1", 8, 1, 0, 0, 0, 0, 10, 16, 35],
+            ["G2", 5, 0, 4, 0, 0, 0, 9, 0, 18],
+            ["G3", 0, 0, 0, 0, 0, 0, 0, 8, 8],
+            ["G4", 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            ["G5", 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            ["G6", 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ])
+        store = GoogleSheetsScoreStore(api, "spreadsheet-123", clock=lambda: "2026-08-08T05:30:00Z")
+
+        result = await store.reset_all_scores(
+            game_master={"id": 7, "name": "Aisha"},
+            command="/resetscores",
+        )
+
+        self.assertEqual({"changed": True}, result)
+        self.assertEqual(
+            [
+                {
+                    "range": "Scores!B2:I7",
+                    "values": [
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                        [0, 0, 0, 0, 0, 0, 0, 0],
+                    ],
+                },
+                {
+                    "range": "Audit!A2:H2",
+                    "values": [["2026-08-08T05:30:00Z", "ALL", "All Scores Reset", "", "", "Aisha", 7, "/resetscores"]],
+                },
+            ],
+            api.writes,
+        )
+
     async def test_leaderboard_uses_game_secret_and_bonus_points(self):
         api = FakeSheetsApi(scores=[
             ["Group", "GameA", "GameB", "GameC", "GameD", "GameE", "GameF", "Secret Mission", "Bonus Mission", "Total"],
