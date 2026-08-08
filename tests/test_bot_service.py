@@ -5,16 +5,73 @@ from orientation_bot.service import BotService, IncomingMessage
 
 SCORE_HELP_MESSAGE = (
     "❗ Invalid score command\n\n"
-    "After completing a game\n"
+    "Why this happened\n"
+    "Use /score with a valid group, game, and score from 1 to 10.\n\n"
     "Command: /score <group> <game> <1-10>\n"
     "Usage: /score G1 GameA 10\n\n"
-    "Games\n"
+    "Valid groups: G1, G2, G3, G4, G5, G6\n\n"
+    "Valid games\n"
     "GameA — Teochew Speed Drawing\n"
     "GameB — Connect Four Relay\n"
     "GameC — Unlock the Code\n"
     "GameD — The Photo Quest\n"
     "GameE — Minefield\n"
     "GameF — Qiaopi: The Missing Letter"
+)
+
+INVALID_SCORE_RANGE_MESSAGE = (
+    "❗ Invalid score command\n\n"
+    "Why this happened\n"
+    "Score must be between 1 and 10.\n\n"
+    "Command: /score <group> <game> <1-10>\n"
+    "Usage: /score G1 GameA 10\n\n"
+    "Valid groups: G1, G2, G3, G4, G5, G6\n\n"
+    "Valid games\n"
+    "GameA — Teochew Speed Drawing\n"
+    "GameB — Connect Four Relay\n"
+    "GameC — Unlock the Code\n"
+    "GameD — The Photo Quest\n"
+    "GameE — Minefield\n"
+    "GameF — Qiaopi: The Missing Letter"
+)
+
+INVALID_SCORE_GAME_MESSAGE = (
+    "❗ Invalid score command\n\n"
+    "Why this happened\n"
+    "Game must be one of: GameA, GameB, GameC, GameD, GameE, GameF.\n\n"
+    "Command: /score <group> <game> <1-10>\n"
+    "Usage: /score G1 GameA 10\n\n"
+    "Valid groups: G1, G2, G3, G4, G5, G6\n\n"
+    "Valid games\n"
+    "GameA — Teochew Speed Drawing\n"
+    "GameB — Connect Four Relay\n"
+    "GameC — Unlock the Code\n"
+    "GameD — The Photo Quest\n"
+    "GameE — Minefield\n"
+    "GameF — Qiaopi: The Missing Letter"
+)
+
+INVALID_SECRET_GROUP_MESSAGE = (
+    "❗ Invalid secret mission command\n\n"
+    "Why this happened\n"
+    "Missing group after /secret.\n\n"
+    "Command: /secret <group>\n"
+    "Usage: /secret G1\n\n"
+    "Valid groups: G1, G2, G3, G4, G5, G6"
+)
+
+INVALID_BONUS_GROUP_MESSAGE = (
+    "❗ Invalid bonus mission command\n\n"
+    "Why this happened\n"
+    "Missing group after /bonus.\n\n"
+    "Add a bonus mission\n"
+    "Command: /bonus <group>\n"
+    "Usage: /bonus G1\n\n"
+    "Remove 1 mistaken bonus mission\n"
+    "Command: /bonus remove <group>\n"
+    "Usage: /bonus remove G1\n\n"
+    "Valid groups: G1, G2, G3, G4, G5, G6\n"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points."
 )
 
 MISSION_HELP_MESSAGE = (
@@ -89,12 +146,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🎉 Teochew Speed Drawing (Game A) complete\n\nGroup — G1\nScore — 8/10",
+                    "text": "🎉 Teochew Speed Drawing (Game A) complete\n\nGroup — G1\nScore — 8/10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 8 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 8 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -119,12 +176,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "✏️ Score updated\n\nGroup — G1\nGame — Teochew Speed Drawing (Game A)\nScore — 6/10 → 8/10",
+                    "text": "✏️ Score updated\n\nGroup — G1\nGame — Teochew Speed Drawing (Game A)\nScore — 6/10 → 8/10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 8 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 8 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -147,12 +204,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🎯 Secret mission completed\n\nGroup — G1\nPoints awarded — 10",
+                    "text": "🎯 Secret mission completed\n\nGroup — G1\nPoints awarded — 10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 10 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 10 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -209,22 +266,22 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🕵️ Bonus mission completed\n\nGroup — G1\nPoints awarded — 8\nBonus Mission total — 8",
+                    "text": "🕵️ Bonus mission completed\n\nGroup — G1\nPoints awarded — 8\nBonus Mission total — 8",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 18 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 18 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🕵️ Bonus mission completed\n\nGroup — G1\nPoints awarded — 8\nBonus Mission total — 16",
+                    "text": "🕵️ Bonus mission completed\n\nGroup — G1\nPoints awarded — 8\nBonus Mission total — 16",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 26 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 26 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -252,12 +309,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "↩️ Bonus mission removed\n\nGroup — G1\nPoints removed — 8\nBonus Mission total — 8",
+                    "text": "↩️ Bonus mission removed\n\nGroup — G1\nPoints removed — 8\nBonus Mission total — 8",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 18 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 18 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -301,12 +358,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🧹 Mission scores reset\n\nSecret Mission and Bonus Mission scores have been cleared for all groups.",
+                    "text": "🧹 Mission scores reset\n\nSecret Mission and Bonus Mission scores have been cleared for all groups.",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 0 pts\n2. 🥈 G2 — 0 pts (tie)\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 0 pts\n2. 🥈 G2 — 0 pts (tie)\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -336,12 +393,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🧹 All scores reset\n\nGame, Secret Mission, and Bonus Mission scores have been cleared for all groups.",
+                    "text": "🧹 All scores reset\n\nGame, Secret Mission, and Bonus Mission scores have been cleared for all groups.",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 0 pts\n2. 🥈 G2 — 0 pts (tie)\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
+                    "text": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 0 pts\n2. 🥈 G2 — 0 pts (tie)\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -387,7 +444,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual(SCORE_HELP_MESSAGE, reply)
+        self.assertEqual(INVALID_SCORE_RANGE_MESSAGE, reply)
 
     async def test_zero_is_rejected_in_the_score_validation_message(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
@@ -402,7 +459,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual(SCORE_HELP_MESSAGE, reply)
+        self.assertEqual(INVALID_SCORE_RANGE_MESSAGE, reply)
 
     async def test_legacy_game_names_are_rejected(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
@@ -411,21 +468,62 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 Game1 8")
         )
 
-        self.assertEqual(SCORE_HELP_MESSAGE, reply)
+        self.assertEqual(INVALID_SCORE_GAME_MESSAGE, reply)
 
     async def test_secret_without_group_shows_linked_mission_help(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
 
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/secret"))
 
-        self.assertEqual(MISSION_HELP_MESSAGE, reply)
+        self.assertEqual(INVALID_SECRET_GROUP_MESSAGE, reply)
 
     async def test_bonus_without_group_shows_linked_mission_help(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
 
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus"))
 
-        self.assertEqual(MISSION_HELP_MESSAGE, reply)
+        self.assertEqual(INVALID_BONUS_GROUP_MESSAGE, reply)
+
+
+    async def test_bonus_remove_without_group_explains_the_problem(self):
+        bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
+
+        reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus remove"))
+
+        self.assertEqual(
+            "❗ Invalid bonus mission command\n\n"
+            "Why this happened\n"
+            "Missing group after /bonus remove.\n\n"
+            "Add a bonus mission\n"
+            "Command: /bonus <group>\n"
+            "Usage: /bonus G1\n\n"
+            "Remove 1 mistaken bonus mission\n"
+            "Command: /bonus remove <group>\n"
+            "Usage: /bonus remove G1\n\n"
+            "Valid groups: G1, G2, G3, G4, G5, G6\n"
+            "Rule: /bonus only works after /secret. Each /bonus adds 8 points.",
+            reply,
+        )
+
+    async def test_bonus_with_invalid_group_explains_the_problem(self):
+        bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
+
+        reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus G7"))
+
+        self.assertEqual(
+            "❗ Invalid bonus mission command\n\n"
+            "Why this happened\n"
+            "Group must be one of: G1, G2, G3, G4, G5, G6.\n\n"
+            "Add a bonus mission\n"
+            "Command: /bonus <group>\n"
+            "Usage: /bonus G1\n\n"
+            "Remove 1 mistaken bonus mission\n"
+            "Command: /bonus remove <group>\n"
+            "Usage: /bonus remove G1\n\n"
+            "Valid groups: G1, G2, G3, G4, G5, G6\n"
+            "Rule: /bonus only works after /secret. Each /bonus adds 8 points.",
+            reply,
+        )
 
     async def test_group_commands_addressed_to_this_bot_are_accepted(self):
         bot = BotService(
@@ -571,8 +669,8 @@ class RecordingPublisher:
     def __init__(self):
         self.messages = []
 
-    async def publish(self, chat_id, html, pin):
-        self.messages.append({"chat_id": chat_id, "html": html, "pin": pin})
+    async def publish(self, chat_id, text, pin):
+        self.messages.append({"chat_id": chat_id, "text": text, "pin": pin})
 
 
 class FailingScoreStore:

@@ -12,12 +12,15 @@ GAME_DETAILS = {
 }
 GAMES = tuple(GAME_DETAILS)
 GAME_LISTING = "\n".join(f"{game} — {details['name']}" for game, details in GAME_DETAILS.items())
+GROUP_LISTING = ", ".join(GROUPS)
 SCORE_HELP_MESSAGE = (
     "❗ Invalid score command\n\n"
-    "After completing a game\n"
+    "Why this happened\n"
+    "Use /score with a valid group, game, and score from 1 to 10.\n\n"
     "Command: /score <group> <game> <1-10>\n"
     "Usage: /score G1 GameA 10\n\n"
-    "Games\n"
+    "Valid groups: " + GROUP_LISTING + "\n\n"
+    "Valid games\n"
     f"{GAME_LISTING}"
 )
 MISSION_HELP_MESSAGE = (
@@ -128,8 +131,10 @@ class BotService:
             return "✅ All scores reset\n\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups."
 
         command = _parse_score_command(text)
-        if command is not None:
-            group, game, score = command
+        if command["matched"]:
+            if not command["valid"]:
+                return _invalid_score_command_message(command["reason"])
+            group, game, score = command["group"], command["game"], command["score"]
             try:
                 result = await self.score_store.replace_score(
                     group=group,
@@ -148,11 +153,13 @@ class BotService:
             await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
             return _score_saved_message(group, game, score, is_first_score=result["is_first_score"])
 
-        secret_group = _parse_secret_command(text)
-        if secret_group is not None:
+        secret_command = _parse_secret_command(text)
+        if secret_command["matched"]:
+            if not secret_command["valid"]:
+                return _invalid_secret_command_message(secret_command["reason"])
             try:
                 result = await self.score_store.complete_secret_mission(
-                    group=secret_group,
+                    group=secret_command["group"],
                     game_master={"id": message.sender_id, "name": message.sender_name},
                     command=message.text,
                 )
@@ -160,14 +167,16 @@ class BotService:
             except Exception:
                 return "Could not update Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
             if not result["changed"]:
-                return _unchanged_secret_message(secret_group, result["points"])
-            await self.publisher.publish(self.announcement_chat_id, _secret_mission_announcement(secret_group, result["points"]), pin=False)
+                return _unchanged_secret_message(secret_command["group"], result["points"])
+            await self.publisher.publish(self.announcement_chat_id, _secret_mission_announcement(secret_command["group"], result["points"]), pin=False)
             await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
-            return _secret_mission_saved_message(secret_group, result["points"])
+            return _secret_mission_saved_message(secret_command["group"], result["points"])
 
         bonus_command = _parse_bonus_command(text)
-        if bonus_command is not None:
-            action, group = bonus_command
+        if bonus_command["matched"]:
+            if not bonus_command["valid"]:
+                return _invalid_bonus_command_message(bonus_command["reason"])
+            action, group = bonus_command["action"], bonus_command["group"]
             try:
                 if action == "add":
                     result = await self.score_store.add_bonus_mission(
@@ -205,32 +214,59 @@ class BotService:
 
 def _parse_score_command(text):
     parts = text.split()
-    if len(parts) != 4 or parts[0] != "/score":
-        return None
+    if not parts or parts[0] != "/score":
+        return {"matched": False}
+    if len(parts) != 4:
+        return {"matched": True, "valid": False, "reason": "Expected 3 parts after /score: group, game, and score."}
+
     _, group, game, score_text = parts
-    if group not in GROUPS or game not in GAMES or not score_text.isdigit():
-        return None
+    if group not in GROUPS:
+        return {"matched": True, "valid": False, "reason": f"Group must be one of: {GROUP_LISTING}."}
+    if game not in GAMES:
+        return {"matched": True, "valid": False, "reason": "Game must be one of: GameA, GameB, GameC, GameD, GameE, GameF."}
+    if not score_text.isdigit():
+        return {"matched": True, "valid": False, "reason": "Score must be a whole number from 1 to 10."}
+
     score = int(score_text)
-    return (group, game, score) if 1 <= score <= 10 else None
+    if not 1 <= score <= 10:
+        return {"matched": True, "valid": False, "reason": "Score must be between 1 and 10."}
+    return {"matched": True, "valid": True, "group": group, "game": game, "score": score}
 
 
 def _parse_secret_command(text):
     parts = text.split()
-    if len(parts) != 2 or parts[0] != "/secret":
-        return None
+    if not parts or parts[0] != "/secret":
+        return {"matched": False}
+    if len(parts) == 1:
+        return {"matched": True, "valid": False, "reason": "Missing group after /secret."}
+    if len(parts) != 2:
+        return {"matched": True, "valid": False, "reason": "Use exactly 1 group after /secret."}
+
     _, group = parts
-    return group if group in GROUPS else None
+    if group not in GROUPS:
+        return {"matched": True, "valid": False, "reason": f"Group must be one of: {GROUP_LISTING}."}
+    return {"matched": True, "valid": True, "group": group}
 
 
 def _parse_bonus_command(text):
     parts = text.split()
     if not parts or parts[0] != "/bonus":
-        return None
-    if len(parts) == 2 and parts[1] in GROUPS:
-        return ("add", parts[1])
-    if len(parts) == 3 and parts[1] == "remove" and parts[2] in GROUPS:
-        return ("remove", parts[2])
-    return None
+        return {"matched": False}
+    if len(parts) == 1:
+        return {"matched": True, "valid": False, "reason": "Missing group after /bonus."}
+    if parts[1] == "remove":
+        if len(parts) == 2:
+            return {"matched": True, "valid": False, "reason": "Missing group after /bonus remove."}
+        if len(parts) != 3:
+            return {"matched": True, "valid": False, "reason": "Use exactly 1 group after /bonus remove."}
+        if parts[2] not in GROUPS:
+            return {"matched": True, "valid": False, "reason": f"Group must be one of: {GROUP_LISTING}."}
+        return {"matched": True, "valid": True, "action": "remove", "group": parts[2]}
+    if len(parts) != 2:
+        return {"matched": True, "valid": False, "reason": "Use /bonus <group> to add points, or /bonus remove <group> to undo 1 bonus mission."}
+    if parts[1] not in GROUPS:
+        return {"matched": True, "valid": False, "reason": f"Group must be one of: {GROUP_LISTING}."}
+    return {"matched": True, "valid": True, "action": "add", "group": parts[1]}
 
 
 def _command_for_this_bot(text, bot_username):
@@ -251,6 +287,46 @@ def _game_name(game):
 
 def _game_display(game):
     return f"{_game_name(game)} (Game {GAME_DETAILS[game]['letter']})"
+
+
+def _invalid_score_command_message(reason):
+    return (
+        "❗ Invalid score command\n\n"
+        "Why this happened\n"
+        f"{reason}\n\n"
+        "Command: /score <group> <game> <1-10>\n"
+        "Usage: /score G1 GameA 10\n\n"
+        f"Valid groups: {GROUP_LISTING}\n\n"
+        "Valid games\n"
+        f"{GAME_LISTING}"
+    )
+
+
+def _invalid_secret_command_message(reason):
+    return (
+        "❗ Invalid secret mission command\n\n"
+        "Why this happened\n"
+        f"{reason}\n\n"
+        "Command: /secret <group>\n"
+        "Usage: /secret G1\n\n"
+        f"Valid groups: {GROUP_LISTING}"
+    )
+
+
+def _invalid_bonus_command_message(reason):
+    return (
+        "❗ Invalid bonus mission command\n\n"
+        "Why this happened\n"
+        f"{reason}\n\n"
+        "Add a bonus mission\n"
+        "Command: /bonus <group>\n"
+        "Usage: /bonus G1\n\n"
+        "Remove 1 mistaken bonus mission\n"
+        "Command: /bonus remove <group>\n"
+        "Usage: /bonus remove G1\n\n"
+        f"Valid groups: {GROUP_LISTING}\n"
+        "Rule: /bonus only works after /secret. Each /bonus adds 8 points."
+    )
 
 
 def _score_saved_message(group, game, score, is_first_score):
