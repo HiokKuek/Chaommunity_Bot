@@ -47,6 +47,26 @@ class TelegramGatewayTests(unittest.TestCase):
             gateway.calls,
         )
 
+    def test_set_webhook_uses_secret_and_message_updates(self):
+        gateway = RecordingTelegramGateway()
+
+        gateway.set_webhook("https://chaommunity-bot.example.com/telegram/webhook", "secret-123")
+
+        self.assertEqual(
+            [
+                (
+                    "setWebhook",
+                    {
+                        "url": "https://chaommunity-bot.example.com/telegram/webhook",
+                        "allowed_updates": ["message", "edited_message"],
+                        "drop_pending_updates": False,
+                        "secret_token": "secret-123",
+                    },
+                )
+            ],
+            gateway.calls,
+        )
+
 
 class RecordingTelegramGateway(TelegramGateway):
     def __init__(self):
@@ -55,4 +75,8 @@ class RecordingTelegramGateway(TelegramGateway):
 
     def _call(self, method, payload):
         self.calls.append((method, payload))
+        if method == "getMe":
+            return {"username": "test_bot"}
+        if method == "sendMessage":
+            return {"message_id": 1}
         return {"ok": True}

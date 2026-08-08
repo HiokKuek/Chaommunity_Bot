@@ -2,7 +2,7 @@
 
 A small Telegram bot for recording orientation-game scores and publishing a pinned leaderboard. Scores are kept in Google Sheets, so organisers can view and correct the source data whenever needed.
 
-The bot is designed for one private Game Master group and one announcement channel. It uses long polling, so it does not need a public web address or webhook.
+The bot is designed for one private Game Master group and one announcement channel. It uses a Telegram webhook, so it must be reachable through a public HTTPS URL.
 
 ## What it does
 
@@ -25,12 +25,13 @@ You need:
 - A Telegram bot token from [@BotFather](https://t.me/BotFather).
 - A private Game Master group and an announcement channel. Add the bot to both; make it an administrator in the announcement channel with permission to post and pin messages.
 - A Google account that can create a Google Cloud project and spreadsheet.
+- A public HTTPS hostname that forwards traffic to this server, such as a Cloudflare Tunnel hostname or a reverse-proxied domain.
 
 ## One-time setup
 
 ### 1. Find the Telegram chat IDs
 
-Add the bot to both chats. Send `/start` in the Game Master group and publish a temporary post in the announcement channel. Use Telegram's `getUpdates` API or a trusted chat-ID utility to find their numeric IDs. Group and channel IDs are normally negative.
+Add the bot to both chats. Send `/start` in the Game Master group and publish a temporary post in the announcement channel. Use a trusted chat-ID utility such as [@RawDataBot](https://t.me/RawDataBot) to find their numeric IDs. Group and channel IDs are normally negative.
 
 ### 2. Set up Google Sheets access
 
@@ -60,9 +61,13 @@ GOOGLE_SPREADSHEET_ID=your_spreadsheet_id
 GOOGLE_SERVICE_ACCOUNT_FILE=/run/secrets/google-service-account.json
 GAME_MASTER_CHAT_ID=-1000000000000
 ANNOUNCEMENT_CHAT_ID=-1000000000001
+PUBLIC_BASE_URL=https://chaommunity-bot.example.com
+WEBHOOK_SECRET=replace_with_a_long_random_secret
 ```
 
 `GOOGLE_SERVICE_ACCOUNT_FILE` is the path **inside** the container. It should stay exactly as shown when using the Docker command below.
+
+`PUBLIC_BASE_URL` must be the public HTTPS origin that Telegram can reach. The bot registers its webhook at `PUBLIC_BASE_URL + /telegram/webhook` on startup.
 
 ## Run the bot with Docker
 
@@ -75,11 +80,14 @@ docker run -d \
   --name orientation-score-bot \
   --restart unless-stopped \
   --env-file .env \
+  -p 8789:8080 \
   -v "$(pwd)/google-service-account.json:/run/secrets/google-service-account.json:ro" \
   orientation-score-bot
 ```
 
 The key is mounted read-only. The container restarts automatically after a Docker or server restart.
+
+Your public tunnel or reverse proxy should forward HTTPS requests for the hostname in `PUBLIC_BASE_URL` to `http://localhost:8789`.
 
 Useful commands:
 
@@ -87,6 +95,7 @@ Useful commands:
 docker logs -f orientation-score-bot
 docker stop orientation-score-bot
 docker start orientation-score-bot
+curl http://localhost:8789/health
 ```
 
 ## Using the bot
@@ -128,11 +137,14 @@ Create a virtual environment and run the test suite:
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m unittest discover -s tests -v
+. .venv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 -m unittest discover -s tests -v
 ```
 
 ## If something goes wrong
 
+- **Telegram says the webhook is failing:** confirm `PUBLIC_BASE_URL` is correct, the public hostname forwards to `localhost:8789`, and `curl http://localhost:8789/health` returns `ok: true` on the server.
 - **Google Sheets says permission denied:** make sure the exact spreadsheet is shared as **Editor** with the email inside the service-account JSON file.
 - **The bot does not reply:** confirm you are using a slash command in the configured Game Master group, then inspect `docker logs -f orientation-score-bot`.
 - **The bot cannot pin leaderboard messages:** grant it permission to pin messages in the announcement channel.
