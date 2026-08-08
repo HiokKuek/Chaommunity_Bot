@@ -26,7 +26,7 @@ class TelegramGateway:
         return self._call("getUpdates", {"offset": offset, "timeout": 30})
 
     def reply(self, chat_id, text):
-        self._call("sendMessage", {"chat_id": chat_id, "text": text})
+        self._call("sendMessage", {"chat_id": chat_id, "text": text, "parse_mode": "HTML"})
 
     def _call(self, method, payload):
         request = Request(f"{self.base_url}/{method}", data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})
