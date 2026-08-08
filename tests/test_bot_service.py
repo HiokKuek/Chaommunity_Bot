@@ -74,7 +74,28 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual("Invalid score format. Use: /score G1 GameA 8 (score must be 0-10).", reply)
+        self.assertEqual(
+            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
+            reply,
+        )
+
+    async def test_zero_is_rejected_in_the_score_validation_message(self):
+        bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
+
+        reply = await bot.handle(
+            IncomingMessage(
+                chat_id=-1001,
+                chat_type="group",
+                sender_id=7,
+                sender_name="Aisha",
+                text="/score G1 GameA 0",
+            )
+        )
+
+        self.assertEqual(
+            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
+            reply,
+        )
 
     async def test_legacy_game_names_are_rejected(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
@@ -83,7 +104,10 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 Game1 8")
         )
 
-        self.assertEqual("Invalid score format. Use: /score G1 GameA 8 (score must be 0-10).", reply)
+        self.assertEqual(
+            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
+            reply,
+        )
 
     async def test_group_commands_addressed_to_this_bot_are_accepted(self):
         bot = BotService(
@@ -96,7 +120,10 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
 
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/help@chaommunity_bot"))
 
-        self.assertEqual("Record or correct a score:\n/score G1 GameA 8\n\nUse a whole number from 0 to 10. Use /leaderboard to show current standings.", reply)
+        self.assertEqual(
+            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
+            reply,
+        )
 
     async def test_group_commands_addressed_to_another_bot_are_ignored(self):
         bot = BotService(

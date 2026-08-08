@@ -3,6 +3,12 @@ from dataclasses import dataclass
 
 GROUPS = ("G1", "G2", "G3", "G4", "G5", "G6")
 GAMES = ("GameA", "GameB", "GameC", "GameD", "GameE", "GameF")
+SCORE_HELP_MESSAGE = (
+    "Invalid message. Please use:\n\n"
+    "<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\n"
+    "For example, if Group 1 attains 10 points at GameA, send:\n"
+    "<pre>/score G1 GameA 10</pre>"
+)
 
 
 @dataclass(frozen=True)
@@ -33,7 +39,7 @@ class BotService:
             return None
 
         if text == "/help":
-            return "Record or correct a score:\n/score G1 GameA 8\n\nUse a whole number from 0 to 10. Use /leaderboard to show current standings."
+            return SCORE_HELP_MESSAGE
         if text == "/leaderboard":
             try:
                 standings = await self.score_store.leaderboard()
@@ -44,7 +50,7 @@ class BotService:
         command = _parse_score_command(text)
         if command is None:
             if text.startswith("/score"):
-                return "Invalid score format. Use: /score G1 GameA 8 (score must be 0-10)."
+                return SCORE_HELP_MESSAGE
             return None
 
         group, game, score = command
@@ -75,7 +81,7 @@ def _parse_score_command(text):
     if group not in GROUPS or game not in GAMES or not score_text.isdigit():
         return None
     score = int(score_text)
-    return (group, game, score) if score <= 10 else None
+    return (group, game, score) if 1 <= score <= 10 else None
 
 
 def _command_for_this_bot(text, bot_username):
