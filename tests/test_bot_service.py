@@ -4,62 +4,58 @@ from orientation_bot.service import BotService, IncomingMessage
 
 
 SCORE_HELP_MESSAGE = (
-    "❗ <b>Invalid score command</b>\n"
-    "<b>To update score after completing a game</b>\n"
-    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
-    "Usage: /score G1 GameA 10\n"
-    "──────────\n"
-    "<b>Games:</b>\n"
-    "GameA: Teochew Speed Drawing\n"
-    "GameB: Connect Four Relay\n"
-    "GameC: Unlock the Code\n"
-    "GameD: The Photo Quest\n"
-    "GameE: Minefield\n"
-    "GameF: Qiaopi: The Missing Letter"
+    "❗ Invalid score command\n\n"
+    "After completing a game\n"
+    "Command: /score <group> <game> <1-10>\n"
+    "Usage: /score G1 GameA 10\n\n"
+    "Games\n"
+    "GameA — Teochew Speed Drawing\n"
+    "GameB — Connect Four Relay\n"
+    "GameC — Unlock the Code\n"
+    "GameD — The Photo Quest\n"
+    "GameE — Minefield\n"
+    "GameF — Qiaopi: The Missing Letter"
 )
 
 MISSION_HELP_MESSAGE = (
-    "🕵️ <b>Mission guide</b>\n\n"
-    "<b>To update score after completing a secret mission</b>\n"
-    "Command: /secret &lt;group&gt;\n"
+    "🕵️ Mission guide\n\n"
+    "After completing a secret mission\n"
+    "Command: /secret <group>\n"
     "Usage: /secret G1\n"
-    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
-    "──────────\n"
-    "<b>To update score after completing a bonus mission</b>\n"
-    "Command: /bonus &lt;group&gt;\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n\n"
+    "After completing a bonus mission\n"
+    "Command: /bonus <group>\n"
     "Usage: /bonus G1\n"
-    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
-    "──────────\n"
-    "<b>To remove 1 bonus mission by mistake</b>\n"
-    "Command: /bonus remove &lt;group&gt;\n"
-    "Usage: /bonus remove G1\n"
-    "──────────\n"
-    "<b>Misc</b>\n"
-    "Reset mission score: /resetmissions"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n\n"
+    "Remove 1 mistaken bonus mission\n"
+    "Command: /bonus remove <group>\n"
+    "Usage: /bonus remove G1\n\n"
+    "Admin\n"
+    "/resetmissions — Reset Secret Mission and Bonus Mission scores\n"
+    "/resetscores — Reset every score"
 )
 
 HELP_MESSAGE = (
-    "📝 <b>Command guide</b>\n\n"
-    "<b>Title 1: Update scores</b>\n\n"
-    "<b>To update score after completing a game</b>\n"
-    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "📝 Command guide\n\n"
+    "Score updates\n\n"
+    "After completing a game\n"
+    "Command: /score <group> <game> <1-10>\n"
     "Usage: /score G1 GameA 10\n"
-    "Games: GameA, GameB, GameC, GameD, GameE, GameF\n"
-    "──────────\n"
-    "<b>To update score after completing a secret mission</b>\n"
-    "Command: /secret &lt;group&gt;\n"
+    "Games: GameA, GameB, GameC, GameD, GameE, GameF\n\n"
+    "After completing a secret mission\n"
+    "Command: /secret <group>\n"
     "Usage: /secret G1\n"
-    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
-    "──────────\n"
-    "<b>To update score after completing a bonus mission</b>\n"
-    "Command: /bonus &lt;group&gt;\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n\n"
+    "After completing a bonus mission\n"
+    "Command: /bonus <group>\n"
     "Usage: /bonus G1\n"
-    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
-    "To remove 1 bonus by mistake: /bonus remove G1\n"
-    "──────────\n"
-    "<b>Title 2: Misc</b>\n\n"
-    "Reset mission score: /resetmissions\n"
-    "Reset entire score: /resetscores"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n\n"
+    "Remove 1 mistaken bonus mission\n"
+    "Command: /bonus remove <group>\n"
+    "Usage: /bonus remove G1\n\n"
+    "Admin & resets\n\n"
+    "Reset mission scores — /resetmissions\n"
+    "Reset every score — /resetscores"
 )
 
 
@@ -85,7 +81,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         )
 
         self.assertEqual(
-            "✅ <b>Score recorded!</b>\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> 8/10",
+            "✅ Score recorded!\n\nGroup — G1\nGame — Teochew Speed Drawing (Game A)\nScore — 8/10",
             reply,
         )
         self.assertEqual(8, score_store.score_for("G1", "GameA"))
@@ -93,12 +89,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🎉 <b>Teochew Speed Drawing (Game A) complete!</b>\n\n<b>Group:</b> G1\n<b>Score:</b> 8/10",
+                    "html": "🎉 Teochew Speed Drawing (Game A) complete\n\nGroup — G1\nScore — 8/10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 8\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 8 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -116,19 +112,19 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 GameA 8"))
 
         self.assertEqual(
-            "✅ <b>Score updated!</b>\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> 8/10",
+            "✅ Score updated!\n\nGroup — G1\nGame — Teochew Speed Drawing (Game A)\nScore — 8/10",
             reply,
         )
         self.assertEqual(
             [
                 {
                     "chat_id": -1002,
-                    "html": "✏️ <b>Score updated</b>\n\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> 6/10 → 8/10",
+                    "html": "✏️ Score updated\n\nGroup — G1\nGame — Teochew Speed Drawing (Game A)\nScore — 6/10 → 8/10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 8\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 8 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -143,7 +139,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/secret G1"))
 
         self.assertEqual(
-            "✅ <b>Secret mission recorded!</b>\n<b>Group:</b> G1\n<b>Points awarded:</b> 10",
+            "✅ Secret mission recorded\n\nGroup — G1\nPoints awarded — 10",
             reply,
         )
         self.assertEqual(10, score_store.secret_points_for("G1"))
@@ -151,12 +147,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🎯 <b>Secret mission completed!</b>\n\n<b>Group:</b> G1\n<b>Points awarded:</b> 10",
+                    "html": "🎯 Secret mission completed\n\nGroup — G1\nPoints awarded — 10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 10\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 10 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -174,7 +170,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/secret G1"))
 
         self.assertEqual(
-            "ℹ️ <b>No change</b>\n<b>Group:</b> G1\n<b>Secret Mission:</b> already recorded as 10",
+            "ℹ️ No change\n\nGroup — G1\nSecret Mission — already recorded as 10",
             reply,
         )
         self.assertEqual([], publisher.messages)
@@ -185,7 +181,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus G1"))
 
         self.assertEqual(
-            "❗ <b>Bonus mission unavailable</b>\nComplete /secret for G1 before adding bonus mission points.",
+            "❗ Bonus mission unavailable\n\nComplete /secret for G1 before adding bonus mission points.",
             reply,
         )
 
@@ -201,11 +197,11 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         second_reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus G1"))
 
         self.assertEqual(
-            "✅ <b>Bonus mission recorded!</b>\n<b>Group:</b> G1\n<b>Bonus added:</b> 8\n<b>Bonus Mission total:</b> 8",
+            "✅ Bonus mission recorded\n\nGroup — G1\nBonus added — 8\nBonus Mission total — 8",
             first_reply,
         )
         self.assertEqual(
-            "✅ <b>Bonus mission recorded!</b>\n<b>Group:</b> G1\n<b>Bonus added:</b> 8\n<b>Bonus Mission total:</b> 16",
+            "✅ Bonus mission recorded\n\nGroup — G1\nBonus added — 8\nBonus Mission total — 16",
             second_reply,
         )
         self.assertEqual(16, score_store.bonus_points_for("G1"))
@@ -213,22 +209,22 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🕵️ <b>Bonus mission completed!</b>\n\n<b>Group:</b> G1\n<b>Points awarded:</b> 8\n<b>Bonus Mission total:</b> 8",
+                    "html": "🕵️ Bonus mission completed\n\nGroup — G1\nPoints awarded — 8\nBonus Mission total — 8",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 18\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 18 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🕵️ <b>Bonus mission completed!</b>\n\n<b>Group:</b> G1\n<b>Points awarded:</b> 8\n<b>Bonus Mission total:</b> 16",
+                    "html": "🕵️ Bonus mission completed\n\nGroup — G1\nPoints awarded — 8\nBonus Mission total — 16",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 26\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 26 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -248,7 +244,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus remove G1"))
 
         self.assertEqual(
-            "✅ <b>Bonus mission removed!</b>\n<b>Group:</b> G1\n<b>Bonus removed:</b> 8\n<b>Bonus Mission total:</b> 8",
+            "✅ Bonus mission removed\n\nGroup — G1\nBonus removed — 8\nBonus Mission total — 8",
             reply,
         )
         self.assertEqual(8, score_store.bonus_points_for("G1"))
@@ -256,12 +252,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "↩️ <b>Bonus mission removed</b>\n\n<b>Group:</b> G1\n<b>Points removed:</b> 8\n<b>Bonus Mission total:</b> 8",
+                    "html": "↩️ Bonus mission removed\n\nGroup — G1\nPoints removed — 8\nBonus Mission total — 8",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 18\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 18 pts\n2. 🥈 G2 — 0 pts\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -279,7 +275,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/bonus remove G1"))
 
         self.assertEqual(
-            "ℹ️ <b>No change</b>\n<b>Group:</b> G1\n<b>Bonus Mission:</b> already 0",
+            "ℹ️ No change\n\nGroup — G1\nBonus Mission — already 0",
             reply,
         )
         self.assertEqual([], publisher.messages)
@@ -296,7 +292,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/resetmissions"))
 
         self.assertEqual(
-            "✅ <b>Mission scores reset!</b>\nAll Secret Mission and Bonus Mission scores are now 0.",
+            "✅ Mission scores reset\n\nAll Secret Mission and Bonus Mission scores are now 0.",
             reply,
         )
         self.assertEqual(0, score_store.secret_points_for("G1"))
@@ -305,12 +301,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🧹 <b>Mission scores reset</b>\n\nSecret Mission and Bonus Mission scores have been cleared for all groups.",
+                    "html": "🧹 Mission scores reset\n\nSecret Mission and Bonus Mission scores have been cleared for all groups.",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 0\n🥇 G2: 0\n🥇 G3: 0\n🥇 G4: 0\n🥇 G5: 0\n🥇 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 0 pts\n2. 🥈 G2 — 0 pts (tie)\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -330,7 +326,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/resetscores"))
 
         self.assertEqual(
-            "✅ <b>All scores reset!</b>\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups.",
+            "✅ All scores reset\n\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups.",
             reply,
         )
         self.assertEqual(0, score_store.score_for("G1", "GameA"))
@@ -340,12 +336,12 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             [
                 {
                     "chat_id": -1002,
-                    "html": "🧹 <b>All scores reset</b>\n\nGame, Secret Mission, and Bonus Mission scores have been cleared for all groups.",
+                    "html": "🧹 All scores reset\n\nGame, Secret Mission, and Bonus Mission scores have been cleared for all groups.",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 0\n🥇 G2: 0\n🥇 G3: 0\n🥇 G4: 0\n🥇 G5: 0\n🥇 G6: 0",
+                    "html": "🏆 Leaderboard — Live Scores\n\n1. 🥇 G1 — 0 pts\n2. 🥈 G2 — 0 pts (tie)\n3. 🥉 G3 — 0 pts (tie)\n4. G4 — 0 pts (tie)\n5. G5 — 0 pts (tie)\n6. G6 — 0 pts (tie)",
                     "pin": True,
                 },
             ],
@@ -488,7 +484,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         reply = await bot.handle(message)
 
         self.assertEqual(
-            "ℹ️ <b>No change</b>\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> already 8/10",
+            "ℹ️ No change\n\nGroup — G1\nGame — Teochew Speed Drawing (Game A)\nScore — already 8/10",
             reply,
         )
         self.assertEqual([], publisher.messages)

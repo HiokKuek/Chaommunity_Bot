@@ -6,21 +6,20 @@ class TelegramGateway:
     def __init__(self, token):
         self.base_url = f"https://api.telegram.org/bot{token}"
 
-    async def publish(self, chat_id, html, pin):
-        # Telegram HTML is a good fit for the small amount of emphasis in announcements.
-        sent = self._call("sendMessage", {"chat_id": chat_id, "text": html, "parse_mode": "HTML"})
+    async def publish(self, chat_id, text, pin):
+        sent = self._call("sendMessage", {"chat_id": chat_id, "text": text})
         if pin:
             self._call("pinChatMessage", {"chat_id": chat_id, "message_id": sent["message_id"], "disable_notification": True})
 
     def set_commands(self):
         self._call("setMyCommands", {"commands": [
-            {"command": "score", "description": "Record a score: /score G1 GameA 8"},
-            {"command": "secret", "description": "Record a secret mission: /secret G1"},
-            {"command": "bonus", "description": "Add or remove a bonus mission: /bonus G1"},
-            {"command": "resetmissions", "description": "Reset all Secret Mission and Bonus Mission scores"},
-            {"command": "resetscores", "description": "Reset all game, Secret Mission, and Bonus Mission scores"},
-            {"command": "leaderboard", "description": "Show the current leaderboard"},
-            {"command": "help", "description": "Show the descriptive command guide"},
+            {"command": "score", "description": "Record a game score — /score G1 GameA 8"},
+            {"command": "secret", "description": "Record a secret mission — /secret G1"},
+            {"command": "bonus", "description": "Add or remove a bonus mission — /bonus G1"},
+            {"command": "resetmissions", "description": "Reset Secret Mission and Bonus Mission scores"},
+            {"command": "resetscores", "description": "Reset every score for every group"},
+            {"command": "leaderboard", "description": "Show live leaderboard"},
+            {"command": "help", "description": "Show command guide"},
         ]})
 
     def username(self):
@@ -30,7 +29,7 @@ class TelegramGateway:
         return self._call("getUpdates", {"offset": offset, "timeout": 30})
 
     def reply(self, chat_id, text):
-        self._call("sendMessage", {"chat_id": chat_id, "text": text, "parse_mode": "HTML"})
+        self._call("sendMessage", {"chat_id": chat_id, "text": text})
 
     def _call(self, method, payload):
         request = Request(f"{self.base_url}/{method}", data=json.dumps(payload).encode(), headers={"Content-Type": "application/json"})

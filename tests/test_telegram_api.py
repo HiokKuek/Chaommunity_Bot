@@ -4,10 +4,10 @@ from orientation_bot.telegram_api import TelegramGateway
 
 
 class TelegramGatewayTests(unittest.TestCase):
-    def test_reply_uses_html_parse_mode(self):
+    def test_reply_sends_plain_text(self):
         gateway = RecordingTelegramGateway()
 
-        gateway.reply(-1001, "🏆 <b>Leaderboard</b>")
+        gateway.reply(-1001, "🏆 Leaderboard — Live Scores")
 
         self.assertEqual(
             [
@@ -15,8 +15,7 @@ class TelegramGatewayTests(unittest.TestCase):
                     "sendMessage",
                     {
                         "chat_id": -1001,
-                        "text": "🏆 <b>Leaderboard</b>",
-                        "parse_mode": "HTML",
+                        "text": "🏆 Leaderboard — Live Scores",
                     },
                 )
             ],
@@ -34,13 +33,13 @@ class TelegramGatewayTests(unittest.TestCase):
                     "setMyCommands",
                     {
                         "commands": [
-                            {"command": "score", "description": "Record a score: /score G1 GameA 8"},
-                            {"command": "secret", "description": "Record a secret mission: /secret G1"},
-                            {"command": "bonus", "description": "Add or remove a bonus mission: /bonus G1"},
-                            {"command": "resetmissions", "description": "Reset all Secret Mission and Bonus Mission scores"},
-                            {"command": "resetscores", "description": "Reset all game, Secret Mission, and Bonus Mission scores"},
-                            {"command": "leaderboard", "description": "Show the current leaderboard"},
-                            {"command": "help", "description": "Show the descriptive command guide"},
+                            {"command": "score", "description": "Record a game score — /score G1 GameA 8"},
+                            {"command": "secret", "description": "Record a secret mission — /secret G1"},
+                            {"command": "bonus", "description": "Add or remove a bonus mission — /bonus G1"},
+                            {"command": "resetmissions", "description": "Reset Secret Mission and Bonus Mission scores"},
+                            {"command": "resetscores", "description": "Reset every score for every group"},
+                            {"command": "leaderboard", "description": "Show live leaderboard"},
+                            {"command": "help", "description": "Show command guide"},
                         ]
                     },
                 )

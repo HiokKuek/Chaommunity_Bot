@@ -11,57 +11,53 @@ GAME_DETAILS = {
     "GameF": {"letter": "F", "name": "Qiaopi: The Missing Letter"},
 }
 GAMES = tuple(GAME_DETAILS)
-GAME_LISTING = "\n".join(f"{game}: {details['name']}" for game, details in GAME_DETAILS.items())
+GAME_LISTING = "\n".join(f"{game} — {details['name']}" for game, details in GAME_DETAILS.items())
 SCORE_HELP_MESSAGE = (
-    "❗ <b>Invalid score command</b>\n"
-    "<b>To update score after completing a game</b>\n"
-    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
-    "Usage: /score G1 GameA 10\n"
-    "──────────\n"
-    "<b>Games:</b>\n"
+    "❗ Invalid score command\n\n"
+    "After completing a game\n"
+    "Command: /score <group> <game> <1-10>\n"
+    "Usage: /score G1 GameA 10\n\n"
+    "Games\n"
     f"{GAME_LISTING}"
 )
 MISSION_HELP_MESSAGE = (
-    "🕵️ <b>Mission guide</b>\n\n"
-    "<b>To update score after completing a secret mission</b>\n"
-    "Command: /secret &lt;group&gt;\n"
+    "🕵️ Mission guide\n\n"
+    "After completing a secret mission\n"
+    "Command: /secret <group>\n"
     "Usage: /secret G1\n"
-    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
-    "──────────\n"
-    "<b>To update score after completing a bonus mission</b>\n"
-    "Command: /bonus &lt;group&gt;\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n\n"
+    "After completing a bonus mission\n"
+    "Command: /bonus <group>\n"
     "Usage: /bonus G1\n"
-    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
-    "──────────\n"
-    "<b>To remove 1 bonus mission by mistake</b>\n"
-    "Command: /bonus remove &lt;group&gt;\n"
-    "Usage: /bonus remove G1\n"
-    "──────────\n"
-    "<b>Misc</b>\n"
-    "Reset mission score: /resetmissions"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n\n"
+    "Remove 1 mistaken bonus mission\n"
+    "Command: /bonus remove <group>\n"
+    "Usage: /bonus remove G1\n\n"
+    "Admin\n"
+    "/resetmissions — Reset Secret Mission and Bonus Mission scores\n"
+    "/resetscores — Reset every score"
 )
 HELP_MESSAGE = (
-    "📝 <b>Command guide</b>\n\n"
-    "<b>Title 1: Update scores</b>\n\n"
-    "<b>To update score after completing a game</b>\n"
-    "Command: /score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "📝 Command guide\n\n"
+    "Score updates\n\n"
+    "After completing a game\n"
+    "Command: /score <group> <game> <1-10>\n"
     "Usage: /score G1 GameA 10\n"
-    "Games: GameA, GameB, GameC, GameD, GameE, GameF\n"
-    "──────────\n"
-    "<b>To update score after completing a secret mission</b>\n"
-    "Command: /secret &lt;group&gt;\n"
+    "Games: GameA, GameB, GameC, GameD, GameE, GameF\n\n"
+    "After completing a secret mission\n"
+    "Command: /secret <group>\n"
     "Usage: /secret G1\n"
-    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n"
-    "──────────\n"
-    "<b>To update score after completing a bonus mission</b>\n"
-    "Command: /bonus &lt;group&gt;\n"
+    "Secret Mission points are auto-assigned in this order: 10, 9, 8, 7, 6, 5\n\n"
+    "After completing a bonus mission\n"
+    "Command: /bonus <group>\n"
     "Usage: /bonus G1\n"
-    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n"
-    "To remove 1 bonus by mistake: /bonus remove G1\n"
-    "──────────\n"
-    "<b>Title 2: Misc</b>\n\n"
-    "Reset mission score: /resetmissions\n"
-    "Reset entire score: /resetscores"
+    "Rule: /bonus only works after /secret. Each /bonus adds 8 points.\n\n"
+    "Remove 1 mistaken bonus mission\n"
+    "Command: /bonus remove <group>\n"
+    "Usage: /bonus remove G1\n\n"
+    "Admin & resets\n\n"
+    "Reset mission scores — /resetmissions\n"
+    "Reset every score — /resetscores"
 )
 
 
@@ -111,10 +107,10 @@ class BotService:
             except Exception:
                 return "Could not update Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
             if not result["changed"]:
-                return "ℹ️ <b>No change</b>\nSecret Mission and Bonus Mission scores are already 0."
+                return "ℹ️ No change\n\nSecret Mission and Bonus Mission scores are already 0."
             await self.publisher.publish(self.announcement_chat_id, _missions_reset_announcement(), pin=False)
             await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
-            return "✅ <b>Mission scores reset!</b>\nAll Secret Mission and Bonus Mission scores are now 0."
+            return "✅ Mission scores reset\n\nAll Secret Mission and Bonus Mission scores are now 0."
 
         if text == "/resetscores":
             try:
@@ -126,10 +122,10 @@ class BotService:
             except Exception:
                 return "Could not update Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
             if not result["changed"]:
-                return "ℹ️ <b>No change</b>\nAll game, Secret Mission, and Bonus Mission scores are already 0."
+                return "ℹ️ No change\n\nAll game, Secret Mission, and Bonus Mission scores are already 0."
             await self.publisher.publish(self.announcement_chat_id, _all_scores_reset_announcement(), pin=False)
             await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
-            return "✅ <b>All scores reset!</b>\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups."
+            return "✅ All scores reset\n\nGame, Secret Mission, and Bonus Mission scores are now 0 for all groups."
 
         command = _parse_score_command(text)
         if command is not None:
@@ -260,137 +256,135 @@ def _game_display(game):
 def _score_saved_message(group, game, score, is_first_score):
     title = "Score recorded!" if is_first_score else "Score updated!"
     return (
-        f"✅ <b>{title}</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Game:</b> {_game_display(game)}\n"
-        f"<b>Score:</b> {score}/10"
+        f"✅ {title}\n\n"
+        f"Group — {group}\n"
+        f"Game — {_game_display(game)}\n"
+        f"Score — {score}/10"
     )
 
 
 def _unchanged_score_message(group, game, score):
     return (
-        "ℹ️ <b>No change</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Game:</b> {_game_display(game)}\n"
-        f"<b>Score:</b> already {score}/10"
+        "ℹ️ No change\n\n"
+        f"Group — {group}\n"
+        f"Game — {_game_display(game)}\n"
+        f"Score — already {score}/10"
     )
 
 
 def _secret_mission_saved_message(group, points):
     return (
-        "✅ <b>Secret mission recorded!</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Points awarded:</b> {points}"
+        "✅ Secret mission recorded\n\n"
+        f"Group — {group}\n"
+        f"Points awarded — {points}"
     )
 
 
 def _unchanged_secret_message(group, points):
     return (
-        "ℹ️ <b>No change</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Secret Mission:</b> already recorded as {points}"
+        "ℹ️ No change\n\n"
+        f"Group — {group}\n"
+        f"Secret Mission — already recorded as {points}"
     )
 
 
 def _bonus_requires_secret_message(group):
     return (
-        "❗ <b>Bonus mission unavailable</b>\n"
+        "❗ Bonus mission unavailable\n\n"
         f"Complete /secret for {group} before adding bonus mission points."
     )
 
 
 def _bonus_mission_saved_message(group, added, total):
     return (
-        "✅ <b>Bonus mission recorded!</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Bonus added:</b> {added}\n"
-        f"<b>Bonus Mission total:</b> {total}"
+        "✅ Bonus mission recorded\n\n"
+        f"Group — {group}\n"
+        f"Bonus added — {added}\n"
+        f"Bonus Mission total — {total}"
     )
 
 
 def _bonus_mission_removed_message(group, removed, total):
     return (
-        "✅ <b>Bonus mission removed!</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Bonus removed:</b> {removed}\n"
-        f"<b>Bonus Mission total:</b> {total}"
+        "✅ Bonus mission removed\n\n"
+        f"Group — {group}\n"
+        f"Bonus removed — {removed}\n"
+        f"Bonus Mission total — {total}"
     )
 
 
 def _unchanged_bonus_message(group):
     return (
-        "ℹ️ <b>No change</b>\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Bonus Mission:</b> already 0"
+        "ℹ️ No change\n\n"
+        f"Group — {group}\n"
+        f"Bonus Mission — already 0"
     )
 
 
 def _completion_announcement(group, game, score):
     return (
-        f"🎉 <b>{_game_display(game)} complete!</b>\n\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Score:</b> {score}/10"
+        f"🎉 {_game_display(game)} complete\n\n"
+        f"Group — {group}\n"
+        f"Score — {score}/10"
     )
 
 
 def _correction_announcement(group, game, previous_score, score):
     return (
-        "✏️ <b>Score updated</b>\n\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Game:</b> {_game_display(game)}\n"
-        f"<b>Score:</b> {previous_score}/10 → {score}/10"
+        "✏️ Score updated\n\n"
+        f"Group — {group}\n"
+        f"Game — {_game_display(game)}\n"
+        f"Score — {previous_score}/10 → {score}/10"
     )
 
 
 def _secret_mission_announcement(group, points):
     return (
-        "🎯 <b>Secret mission completed!</b>\n\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Points awarded:</b> {points}"
+        "🎯 Secret mission completed\n\n"
+        f"Group — {group}\n"
+        f"Points awarded — {points}"
     )
 
 
 def _bonus_mission_announcement(group, points, total):
     return (
-        "🕵️ <b>Bonus mission completed!</b>\n\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Points awarded:</b> {points}\n"
-        f"<b>Bonus Mission total:</b> {total}"
+        "🕵️ Bonus mission completed\n\n"
+        f"Group — {group}\n"
+        f"Points awarded — {points}\n"
+        f"Bonus Mission total — {total}"
     )
 
 
 def _bonus_mission_removed_announcement(group, removed, total):
     return (
-        "↩️ <b>Bonus mission removed</b>\n\n"
-        f"<b>Group:</b> {group}\n"
-        f"<b>Points removed:</b> {removed}\n"
-        f"<b>Bonus Mission total:</b> {total}"
+        "↩️ Bonus mission removed\n\n"
+        f"Group — {group}\n"
+        f"Points removed — {removed}\n"
+        f"Bonus Mission total — {total}"
     )
 
 
 def _missions_reset_announcement():
     return (
-        "🧹 <b>Mission scores reset</b>\n\n"
+        "🧹 Mission scores reset\n\n"
         "Secret Mission and Bonus Mission scores have been cleared for all groups."
     )
 
 
 def _all_scores_reset_announcement():
     return (
-        "🧹 <b>All scores reset</b>\n\n"
+        "🧹 All scores reset\n\n"
         "Game, Secret Mission, and Bonus Mission scores have been cleared for all groups."
     )
 
 
 def _leaderboard_announcement(standings):
     ordered = sorted(standings, key=lambda standing: (-standing["total"], standing["group"]))
-    previous_total = None
-    rank = 0
-    lines = ["🏆 <b>Leaderboard</b>", "<i>Live scores</i>", ""]
+    seen_totals = set()
+    lines = ["🏆 Leaderboard — Live Scores", ""]
     for index, standing in enumerate(ordered, start=1):
-        if standing["total"] != previous_total:
-            rank = index
-        previous_total = standing["total"]
-        prefix = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, f"{rank}.")
-        lines.append(f"{prefix} {standing['group']}: {standing['total']}")
+        medal = {1: "🥇 ", 2: "🥈 ", 3: "🥉 "}.get(index, "")
+        tie_suffix = " (tie)" if standing["total"] in seen_totals else ""
+        lines.append(f"{index}. {medal}{standing['group']} — {standing['total']} pts{tie_suffix}")
+        seen_totals.add(standing["total"])
     return "\n".join(lines)
