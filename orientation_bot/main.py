@@ -16,7 +16,13 @@ async def run():
     api.ensure_workbook(spreadsheet_id)
     telegram = TelegramGateway(token)
     telegram.set_commands()
-    bot = BotService(GoogleSheetsScoreStore(api, spreadsheet_id), telegram, game_master_chat_id, announcement_chat_id)
+    bot = BotService(
+        GoogleSheetsScoreStore(api, spreadsheet_id),
+        telegram,
+        game_master_chat_id,
+        announcement_chat_id,
+        bot_username=telegram.username(),
+    )
     offset = 0
     while True:
         for update in telegram.updates(offset):

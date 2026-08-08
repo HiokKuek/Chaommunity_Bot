@@ -76,6 +76,19 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual("Invalid score. Use: /score G1 Game1 <0-10>.", reply)
 
+    async def test_group_commands_addressed_to_this_bot_are_accepted(self):
+        bot = BotService(
+            MemoryScoreStore(),
+            RecordingPublisher(),
+            game_master_chat_id=-1001,
+            announcement_chat_id=-1002,
+            bot_username="chaommunity_bot",
+        )
+
+        reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/help@chaommunity_bot"))
+
+        self.assertEqual("Use /score G1 Game1 <0-10> to record or correct a score. Use /leaderboard to show current standings.", reply)
+
     async def test_sheet_failure_rejects_the_score_without_an_announcement(self):
         publisher = RecordingPublisher()
         bot = BotService(FailingScoreStore(), publisher, game_master_chat_id=-1001, announcement_chat_id=-1002)

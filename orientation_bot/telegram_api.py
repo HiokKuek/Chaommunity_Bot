@@ -18,6 +18,9 @@ class TelegramGateway:
             {"command": "help", "description": "Show score command help"},
         ]})
 
+    def username(self):
+        return self._call("getMe", {})["username"]
+
     def updates(self, offset):
         return self._call("getUpdates", {"offset": offset, "timeout": 30})
 

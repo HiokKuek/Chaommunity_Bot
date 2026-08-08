@@ -15,11 +15,12 @@ class IncomingMessage:
 
 
 class BotService:
-    def __init__(self, score_store, publisher, game_master_chat_id, announcement_chat_id):
+    def __init__(self, score_store, publisher, game_master_chat_id, announcement_chat_id, bot_username=None):
         self.score_store = score_store
         self.publisher = publisher
         self.game_master_chat_id = game_master_chat_id
         self.announcement_chat_id = announcement_chat_id
+        self.bot_username = bot_username
 
     async def handle(self, message):
         if message.chat_id != self.game_master_chat_id:
@@ -27,18 +28,20 @@ class BotService:
                 return "You are not an authenticated user. Contact @iamrolling if you require access."
             return None
 
-        if message.text == "/help":
+        text = _command_for_this_bot(message.text, self.bot_username)
+
+        if text == "/help":
             return "Use /score G1 Game1 <0-10> to record or correct a score. Use /leaderboard to show current standings."
-        if message.text == "/leaderboard":
+        if text == "/leaderboard":
             try:
                 standings = await self.score_store.leaderboard()
             except Exception:
                 return "Could not read Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
             return _leaderboard_announcement(standings)
 
-        command = _parse_score_command(message.text)
+        command = _parse_score_command(text)
         if command is None:
-            if message.text.startswith("/score"):
+            if text.startswith("/score"):
                 return "Invalid score. Use: /score G1 Game1 <0-10>."
             return None
 
@@ -71,6 +74,16 @@ def _parse_score_command(text):
         return None
     score = int(score_text)
     return (group, game, score) if score <= 10 else None
+
+
+def _command_for_this_bot(text, bot_username):
+    if not bot_username:
+        return text
+    command, separator, rest = text.partition(" ")
+    suffix = f"@{bot_username}".lower()
+    if command.lower().endswith(suffix):
+        return command[:-len(suffix)] + separator + rest
+    return text
 
 
 def _completion_announcement(group, game, score):
