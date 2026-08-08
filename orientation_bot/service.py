@@ -2,12 +2,37 @@ from dataclasses import dataclass
 
 
 GROUPS = ("G1", "G2", "G3", "G4", "G5", "G6")
-GAMES = ("GameA", "GameB", "GameC", "GameD", "GameE", "GameF")
+GAME_DETAILS = {
+    "GameA": {"letter": "A", "name": "Teochew Speed Drawing"},
+    "GameB": {"letter": "B", "name": "Connect Four Relay"},
+    "GameC": {"letter": "C", "name": "Unlock the Code"},
+    "GameD": {"letter": "D", "name": "The Photo Quest"},
+    "GameE": {"letter": "E", "name": "Minefield"},
+    "GameF": {"letter": "F", "name": "Qiaopi: The Missing Letter"},
+}
+GAMES = tuple(GAME_DETAILS)
+GAME_LISTING = "\n".join(f"{game}: {details['name']}" for game, details in GAME_DETAILS.items())
+INVALID_SCORE_MESSAGE = (
+    "❗ <b>Invalid message</b>\n"
+    "Please use:\n"
+    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "──────────\n"
+    "<b>Example:</b>\n"
+    "/score G1 GameA 10\n"
+    "──────────\n"
+    "<b>Games:</b>\n"
+    f"{GAME_LISTING}"
+)
 SCORE_HELP_MESSAGE = (
-    "Invalid message. Please use:\n\n"
-    "<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\n"
-    "For example, if Group 1 attains 10 points at GameA, send:\n"
-    "<pre>/score G1 GameA 10</pre>"
+    "📝 <b>How to record a score</b>\n\n"
+    "<b>Format:</b>\n"
+    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "──────────\n"
+    "<b>Example:</b>\n"
+    "/score G1 GameA 10\n"
+    "──────────\n"
+    "<b>Games:</b>\n"
+    f"{GAME_LISTING}"
 )
 
 
@@ -50,7 +75,7 @@ class BotService:
         command = _parse_score_command(text)
         if command is None:
             if text.startswith("/score"):
-                return SCORE_HELP_MESSAGE
+                return INVALID_SCORE_MESSAGE
             return None
 
         group, game, score = command
@@ -66,11 +91,11 @@ class BotService:
         except Exception:
             return "Could not update Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
         if not result["changed"]:
-            return f"No change: {group} already has {score}/10 for {game}."
+            return _unchanged_score_message(group, game, score)
         announcement = _completion_announcement(group, game, score) if result["is_first_score"] else _correction_announcement(group, game, result["previous_score"], score)
         await self.publisher.publish(self.announcement_chat_id, announcement, pin=False)
         await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
-        return f"✅ Score recorded\n{group} · {game} · {score}/10"
+        return _score_saved_message(group, game, score, is_first_score=result["is_first_score"])
 
 
 def _parse_score_command(text):
@@ -96,12 +121,48 @@ def _command_for_this_bot(text, bot_username):
     return text
 
 
+def _game_name(game):
+    return GAME_DETAILS[game]["name"]
+
+
+def _game_display(game):
+    return f"{_game_name(game)} (Game {GAME_DETAILS[game]['letter']})"
+
+
+def _score_saved_message(group, game, score, is_first_score):
+    title = "Score recorded!" if is_first_score else "Score updated!"
+    return (
+        f"✅ <b>{title}</b>\n"
+        f"<b>Group:</b> {group}\n"
+        f"<b>Game:</b> {_game_display(game)}\n"
+        f"<b>Score:</b> {score}/10"
+    )
+
+
+def _unchanged_score_message(group, game, score):
+    return (
+        "ℹ️ <b>No change</b>\n"
+        f"<b>Group:</b> {group}\n"
+        f"<b>Game:</b> {_game_display(game)}\n"
+        f"<b>Score:</b> already {score}/10"
+    )
+
+
 def _completion_announcement(group, game, score):
-    return f"🎉 <b>{game} complete!</b>\n\n<b>Group</b> · {group}\n<b>Score</b> · {score} / 10"
+    return (
+        f"🎉 <b>{_game_display(game)} complete!</b>\n\n"
+        f"<b>Group:</b> {group}\n"
+        f"<b>Score:</b> {score}/10"
+    )
 
 
 def _correction_announcement(group, game, previous_score, score):
-    return f"✏️ <b>Score corrected</b>\n\n<b>Group</b> · {group}\n<b>Game</b> · {game}\n<b>Score</b> · {previous_score} → {score} / 10"
+    return (
+        "✏️ <b>Score updated</b>\n\n"
+        f"<b>Group:</b> {group}\n"
+        f"<b>Game:</b> {_game_display(game)}\n"
+        f"<b>Score:</b> {previous_score}/10 → {score}/10"
+    )
 
 
 def _leaderboard_announcement(standings):
@@ -114,5 +175,5 @@ def _leaderboard_announcement(standings):
             rank = index
         previous_total = standing["total"]
         prefix = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, f"{rank}.")
-        lines.append(f"{prefix} <b>{standing['group']}</b> · <b>{standing['total']}</b>")
+        lines.append(f"{prefix} {standing['group']}: {standing['total']}")
     return "\n".join(lines)

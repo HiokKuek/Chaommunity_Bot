@@ -3,6 +3,41 @@ import unittest
 from orientation_bot.service import BotService, IncomingMessage
 
 
+INVALID_SCORE_MESSAGE = (
+    "❗ <b>Invalid message</b>\n"
+    "Please use:\n"
+    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "──────────\n"
+    "<b>Example:</b>\n"
+    "/score G1 GameA 10\n"
+    "──────────\n"
+    "<b>Games:</b>\n"
+    "GameA: Teochew Speed Drawing\n"
+    "GameB: Connect Four Relay\n"
+    "GameC: Unlock the Code\n"
+    "GameD: The Photo Quest\n"
+    "GameE: Minefield\n"
+    "GameF: Qiaopi: The Missing Letter"
+)
+
+SCORE_HELP_MESSAGE = (
+    "📝 <b>How to record a score</b>\n\n"
+    "<b>Format:</b>\n"
+    "/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;\n"
+    "──────────\n"
+    "<b>Example:</b>\n"
+    "/score G1 GameA 10\n"
+    "──────────\n"
+    "<b>Games:</b>\n"
+    "GameA: Teochew Speed Drawing\n"
+    "GameB: Connect Four Relay\n"
+    "GameC: Unlock the Code\n"
+    "GameD: The Photo Quest\n"
+    "GameE: Minefield\n"
+    "GameF: Qiaopi: The Missing Letter"
+)
+
+
 class BotServiceTests(unittest.IsolatedAsyncioTestCase):
     async def test_staff_can_record_a_first_score_and_publish_a_pinned_leaderboard(self):
         score_store = MemoryScoreStore()
@@ -24,18 +59,51 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual("✅ Score recorded\nG1 · GameA · 8/10", reply)
+        self.assertEqual(
+            "✅ <b>Score recorded!</b>\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> 8/10",
+            reply,
+        )
         self.assertEqual(8, score_store.score_for("G1", "GameA"))
         self.assertEqual(
             [
                 {
                     "chat_id": -1002,
-                    "html": "🎉 <b>GameA complete!</b>\n\n<b>Group</b> · G1\n<b>Score</b> · 8 / 10",
+                    "html": "🎉 <b>Teochew Speed Drawing (Game A) complete!</b>\n\n<b>Group:</b> G1\n<b>Score:</b> 8/10",
                     "pin": False,
                 },
                 {
                     "chat_id": -1002,
-                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 <b>G1</b> · <b>8</b>\n🥈 <b>G2</b> · <b>0</b>\n🥈 <b>G3</b> · <b>0</b>\n🥈 <b>G4</b> · <b>0</b>\n🥈 <b>G5</b> · <b>0</b>\n🥈 <b>G6</b> · <b>0</b>",
+                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 8\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
+                    "pin": True,
+                },
+            ],
+            publisher.messages,
+        )
+
+    async def test_score_correction_uses_game_name_in_messages(self):
+        score_store = MemoryScoreStore()
+        publisher = RecordingPublisher()
+        bot = BotService(score_store, publisher, game_master_chat_id=-1001, announcement_chat_id=-1002)
+
+        await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 GameA 6"))
+        publisher.messages.clear()
+
+        reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 GameA 8"))
+
+        self.assertEqual(
+            "✅ <b>Score updated!</b>\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> 8/10",
+            reply,
+        )
+        self.assertEqual(
+            [
+                {
+                    "chat_id": -1002,
+                    "html": "✏️ <b>Score updated</b>\n\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> 6/10 → 8/10",
+                    "pin": False,
+                },
+                {
+                    "chat_id": -1002,
+                    "html": "🏆 <b>Leaderboard</b>\n<i>Live scores</i>\n\n🥇 G1: 8\n🥈 G2: 0\n🥈 G3: 0\n🥈 G4: 0\n🥈 G5: 0\n🥈 G6: 0",
                     "pin": True,
                 },
             ],
@@ -74,10 +142,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual(
-            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
-            reply,
-        )
+        self.assertEqual(INVALID_SCORE_MESSAGE, reply)
 
     async def test_zero_is_rejected_in_the_score_validation_message(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
@@ -92,10 +157,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual(
-            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
-            reply,
-        )
+        self.assertEqual(INVALID_SCORE_MESSAGE, reply)
 
     async def test_legacy_game_names_are_rejected(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
@@ -104,10 +166,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 Game1 8")
         )
 
-        self.assertEqual(
-            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
-            reply,
-        )
+        self.assertEqual(INVALID_SCORE_MESSAGE, reply)
 
     async def test_group_commands_addressed_to_this_bot_are_accepted(self):
         bot = BotService(
@@ -120,10 +179,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
 
         reply = await bot.handle(IncomingMessage(-1001, "group", 7, "Aisha", "/help@chaommunity_bot"))
 
-        self.assertEqual(
-            "Invalid message. Please use:\n\n<pre>/score &lt;group&gt; &lt;game&gt; &lt;1-10&gt;</pre>\n\nFor example, if Group 1 attains 10 points at GameA, send:\n<pre>/score G1 GameA 10</pre>",
-            reply,
-        )
+        self.assertEqual(SCORE_HELP_MESSAGE, reply)
 
     async def test_group_commands_addressed_to_another_bot_are_ignored(self):
         bot = BotService(
@@ -168,7 +224,10 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
         publisher.messages.clear()
         reply = await bot.handle(message)
 
-        self.assertEqual("No change: G1 already has 8/10 for GameA.", reply)
+        self.assertEqual(
+            "ℹ️ <b>No change</b>\n<b>Group:</b> G1\n<b>Game:</b> Teochew Speed Drawing (Game A)\n<b>Score:</b> already 8/10",
+            reply,
+        )
         self.assertEqual([], publisher.messages)
 
 
