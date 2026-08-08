@@ -7,8 +7,11 @@ The bot is designed for one private Game Master group and one announcement chann
 ## What it does
 
 - Records a score with `/score G1 GameA 8`.
-- Accepts groups `G1`–`G6`, games `GameA`–`GameF`, and whole-number scores from 0 to 10.
-- Replaces a previous score instead of adding to it.
+- Records secret-mission completions with `/secret G1` and bonus-mission updates with `/bonus G1` or `/bonus remove G1`.
+- Accepts groups `G1`–`G6`, games `GameA`–`GameF`, and whole-number scores from 1 to 10.
+- Automatically awards Secret Mission points in completion order: `10, 9, 8, 7, 6, 5`.
+- Only allows Bonus Mission points after that group's own Secret Mission is complete; each `/bonus` adds `8` points.
+- Replaces a previous game score instead of adding to it.
 - Posts a completion or correction notice and a pinned leaderboard in the announcement channel.
 - Keeps `Scores` and `Audit` tabs in the configured Google Sheet.
 - Only accepts commands in the configured Game Master group. Direct messages receive an access notice; other group chats are ignored.
@@ -93,7 +96,15 @@ In the Game Master group, type `/` or use Telegram's command-menu button to see 
 /help
 /leaderboard
 /score G1 GameA 8
+/secret G1
+/bonus G1
+/bonus remove G1
+/resetmissions
 ```
+
+`/secret` marks a group's own Secret Mission as complete and automatically assigns the next available score from `10, 9, 8, 7, 6, 5`.
+
+`/bonus` adds `8` Bonus Mission points after that group has completed `/secret`. `/bonus remove` subtracts one `8`-point step if a Game Master records too many bonus missions.
 
 In a group, Telegram may address a command to the bot. These forms work too:
 
