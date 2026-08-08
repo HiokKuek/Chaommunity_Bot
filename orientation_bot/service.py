@@ -44,7 +44,7 @@ class BotService:
         command = _parse_score_command(text)
         if command is None:
             if text.startswith("/score"):
-                return "Invalid score format. Use: /score G1 GameA <0-10>."
+                return "Invalid score format. Use: /score G1 GameA 8 (score must be 0-10)."
             return None
 
         group, game, score = command

@@ -74,7 +74,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             )
         )
 
-        self.assertEqual("Invalid score format. Use: /score G1 GameA <0-10>.", reply)
+        self.assertEqual("Invalid score format. Use: /score G1 GameA 8 (score must be 0-10).", reply)
 
     async def test_legacy_game_names_are_rejected(self):
         bot = BotService(MemoryScoreStore(), RecordingPublisher(), game_master_chat_id=-1001, announcement_chat_id=-1002)
@@ -83,7 +83,7 @@ class BotServiceTests(unittest.IsolatedAsyncioTestCase):
             IncomingMessage(-1001, "group", 7, "Aisha", "/score G1 Game1 8")
         )
 
-        self.assertEqual("Invalid score format. Use: /score G1 GameA <0-10>.", reply)
+        self.assertEqual("Invalid score format. Use: /score G1 GameA 8 (score must be 0-10).", reply)
 
     async def test_group_commands_addressed_to_this_bot_are_accepted(self):
         bot = BotService(
