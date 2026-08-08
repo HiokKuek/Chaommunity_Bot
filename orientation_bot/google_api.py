@@ -2,6 +2,10 @@ from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
 
+NEW_SCORE_HEADERS = ["Group", "GameA", "GameB", "GameC", "GameD", "GameE", "GameF", "Total"]
+LEGACY_SCORE_HEADERS = ["Group", "Game1", "Game2", "Game3", "Game4", "Game5", "Game6", "Total"]
+
+
 class GoogleSheetsApi:
     def __init__(self, service):
         self.service = service
@@ -44,10 +48,13 @@ class GoogleSheetsApi:
             rows = [[group, 0, 0, 0, 0, 0, 0, f"=SUM(B{index}:G{index})"] for index, group in enumerate(("G1", "G2", "G3", "G4", "G5", "G6"), start=2)]
             data = []
             if created_scores:
-                data.append({"range": "Scores!A1:H7", "values": [["Group", "Game1", "Game2", "Game3", "Game4", "Game5", "Game6", "Total"], *rows]})
+                data.append({"range": "Scores!A1:H7", "values": [NEW_SCORE_HEADERS, *rows]})
             if created_audit:
                 data.append({"range": "Audit!A1:H1", "values": [["Timestamp", "Group", "Game", "Previous score", "New score", "Game Master", "Telegram ID", "Command"]]})
             self.batch_update_values(spreadsheet_id, data)
+        score_headers = self.get_values(spreadsheet_id, "Scores!A1:H1")
+        if score_headers and score_headers[0][:8] == LEGACY_SCORE_HEADERS:
+            self.batch_update_values(spreadsheet_id, [{"range": "Scores!A1:H1", "values": [NEW_SCORE_HEADERS]}])
         formatted = self.service.spreadsheets().get(spreadsheetId=spreadsheet_id).execute()
         ids = {sheet["properties"]["title"]: sheet["properties"]["sheetId"] for sheet in formatted["sheets"]}
         format_requests = []

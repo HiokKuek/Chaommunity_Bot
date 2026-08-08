@@ -1,6 +1,16 @@
 from datetime import UTC, datetime
 
 
+LEGACY_GAME_COLUMNS = {
+    "GameA": "Game1",
+    "GameB": "Game2",
+    "GameC": "Game3",
+    "GameD": "Game4",
+    "GameE": "Game5",
+    "GameF": "Game6",
+}
+
+
 class GoogleSheetsScoreStore:
     def __init__(self, api, spreadsheet_id, clock=None):
         self.api = api
@@ -38,7 +48,8 @@ class GoogleSheetsScoreStore:
 
 def _score_position(scores, group, game):
     headers = scores[0]
-    score_column = headers.index(game)
+    header_name = game if game in headers else LEGACY_GAME_COLUMNS.get(game, game)
+    score_column = headers.index(header_name)
     for index, row in enumerate(scores[1:], start=1):
         if row[0] == group:
             return index, score_column

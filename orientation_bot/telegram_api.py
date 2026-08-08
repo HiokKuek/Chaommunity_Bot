@@ -7,13 +7,14 @@ class TelegramGateway:
         self.base_url = f"https://api.telegram.org/bot{token}"
 
     async def publish(self, chat_id, html, pin):
+        # Telegram HTML is a good fit for the small amount of emphasis in announcements.
         sent = self._call("sendMessage", {"chat_id": chat_id, "text": html, "parse_mode": "HTML"})
         if pin:
             self._call("pinChatMessage", {"chat_id": chat_id, "message_id": sent["message_id"], "disable_notification": True})
 
     def set_commands(self):
         self._call("setMyCommands", {"commands": [
-            {"command": "score", "description": "Record a score: /score G1 Game1 8"},
+            {"command": "score", "description": "Record a score: /score G1 GameA 8"},
             {"command": "leaderboard", "description": "Show the current leaderboard"},
             {"command": "help", "description": "Show score command help"},
         ]})

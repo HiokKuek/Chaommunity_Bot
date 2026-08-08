@@ -6,8 +6,8 @@ The bot is designed for one private Game Master group and one announcement chann
 
 ## What it does
 
-- Records a score with `/score G1 Game1 8`.
-- Accepts groups `G1`–`G6`, games `Game1`–`Game6`, and whole-number scores from 0 to 10.
+- Records a score with `/score G1 GameA 8`.
+- Accepts groups `G1`–`G6`, games `GameA`–`GameF`, and whole-number scores from 0 to 10.
 - Replaces a previous score instead of adding to it.
 - Posts a completion or correction notice and a pinned leaderboard in the announcement channel.
 - Keeps `Scores` and `Audit` tabs in the configured Google Sheet.
@@ -40,7 +40,7 @@ Add the bot to both chats. Send `/start` in the Game Master group and publish a 
 
 4. Share that sheet directly with the service account's email address as an **Editor**.
 
-Do not commit the JSON key. Keep it next to the deployment files or in another private location on the server. The bot creates and formats the `Scores` and `Audit` tabs on its first successful start.
+Do not commit the JSON key. Keep it next to the deployment files or in another private location on the server. The bot creates and formats the `Scores` and `Audit` tabs on its first successful start. Existing `Scores` tabs with legacy `Game1`–`Game6` headers are renamed in place to `GameA`–`GameF` on startup.
 
 ### 3. Create `.env`
 
@@ -92,7 +92,7 @@ In the Game Master group, type `/` or use Telegram's command-menu button to see 
 ```text
 /help
 /leaderboard
-/score G1 Game1 8
+/score G1 GameA 8
 ```
 
 In a group, Telegram may address a command to the bot. These forms work too:
@@ -100,8 +100,10 @@ In a group, Telegram may address a command to the bot. These forms work too:
 ```text
 /help@chaommunity_bot
 /leaderboard@chaommunity_bot
-/score@chaommunity_bot G1 Game1 8
+/score@chaommunity_bot G1 GameA 8
 ```
+
+Commands addressed to another bot are ignored.
 
 A repeated score does not send another announcement. A changed score posts a correction and refreshed, pinned leaderboard.
 

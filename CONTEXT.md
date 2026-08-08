@@ -9,7 +9,7 @@ One of the six competing orientation groups. A group begins with zero and has on
 _Avoid_: Team
 
 **Game**:
-One of the six orientation activities for which a group can receive a Score. Games are identified as `Game1` through `Game6`.
+One of the six orientation activities for which a group can receive a Score. Games are identified as `GameA` through `GameF`.
 _Avoid_: Station, challenge
 
 **Game Master**:

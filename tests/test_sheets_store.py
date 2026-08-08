@@ -10,10 +10,10 @@ class GoogleSheetsScoreStoreTests(unittest.IsolatedAsyncioTestCase):
 
         result = await store.replace_score(
             group="G1",
-            game="Game1",
+            game="GameA",
             score=8,
             game_master={"id": 7, "name": "Aisha"},
-            command="/score G1 Game1 8",
+            command="/score G1 GameA 8",
         )
 
         self.assertEqual({"previous_score": 0, "is_first_score": True, "changed": True}, result)
@@ -25,7 +25,7 @@ class GoogleSheetsScoreStoreTests(unittest.IsolatedAsyncioTestCase):
                 },
                 {
                     "range": "Audit!A2:H2",
-                    "values": [["2026-08-08T05:30:00Z", "G1", "Game1", 0, 8, "Aisha", 7, "/score G1 Game1 8"]],
+                    "values": [["2026-08-08T05:30:00Z", "G1", "GameA", 0, 8, "Aisha", 7, "/score G1 GameA 8"]],
                 },
             ],
             api.writes,
@@ -33,7 +33,7 @@ class GoogleSheetsScoreStoreTests(unittest.IsolatedAsyncioTestCase):
 
     async def test_leaderboard_uses_the_current_scores_tab(self):
         api = FakeSheetsApi(scores=[
-            ["Group", "Game1", "Game2", "Game3", "Game4", "Game5", "Game6", "Total"],
+            ["Group", "GameA", "GameB", "GameC", "GameD", "GameE", "GameF", "Total"],
             ["G1", 8, 3, 0, 0, 0, 0, 11],
             ["G2", 5, 0, 0, 0, 0, 0, 5],
             ["G3", 0, 0, 0, 0, 0, 0, 0],
@@ -50,11 +50,34 @@ class GoogleSheetsScoreStoreTests(unittest.IsolatedAsyncioTestCase):
             standings,
         )
 
+    async def test_replace_score_supports_legacy_game_headers_during_transition(self):
+        api = FakeSheetsApi(scores=[
+            ["Group", "Game1", "Game2", "Game3", "Game4", "Game5", "Game6", "Total"],
+            ["G1", 0, 0, 0, 0, 0, 0, 0],
+            ["G2", 0, 0, 0, 0, 0, 0, 0],
+            ["G3", 0, 0, 0, 0, 0, 0, 0],
+            ["G4", 0, 0, 0, 0, 0, 0, 0],
+            ["G5", 0, 0, 0, 0, 0, 0, 0],
+            ["G6", 0, 0, 0, 0, 0, 0, 0],
+        ])
+        store = GoogleSheetsScoreStore(api, "spreadsheet-123", clock=lambda: "2026-08-08T05:30:00Z")
+
+        result = await store.replace_score(
+            group="G1",
+            game="GameA",
+            score=8,
+            game_master={"id": 7, "name": "Aisha"},
+            command="/score G1 GameA 8",
+        )
+
+        self.assertEqual({"previous_score": 0, "is_first_score": True, "changed": True}, result)
+        self.assertEqual("Scores!B2", api.writes[0]["range"])
+
 
 class FakeSheetsApi:
     def __init__(self, scores=None):
         self.scores = scores or [
-            ["Group", "Game1", "Game2", "Game3", "Game4", "Game5", "Game6", "Total"],
+            ["Group", "GameA", "GameB", "GameC", "GameD", "GameE", "GameF", "Total"],
             ["G1", 0, 0, 0, 0, 0, 0, 0],
             ["G2", 0, 0, 0, 0, 0, 0, 0],
             ["G3", 0, 0, 0, 0, 0, 0, 0],

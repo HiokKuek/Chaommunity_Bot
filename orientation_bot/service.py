@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 GROUPS = ("G1", "G2", "G3", "G4", "G5", "G6")
-GAMES = ("Game1", "Game2", "Game3", "Game4", "Game5", "Game6")
+GAMES = ("GameA", "GameB", "GameC", "GameD", "GameE", "GameF")
 
 
 @dataclass(frozen=True)
@@ -29,9 +29,11 @@ class BotService:
             return None
 
         text = _command_for_this_bot(message.text, self.bot_username)
+        if text is None:
+            return None
 
         if text == "/help":
-            return "Use /score G1 Game1 <0-10> to record or correct a score. Use /leaderboard to show current standings."
+            return "Record or correct a score:\n/score G1 GameA 8\n\nUse a whole number from 0 to 10. Use /leaderboard to show current standings."
         if text == "/leaderboard":
             try:
                 standings = await self.score_store.leaderboard()
@@ -42,7 +44,7 @@ class BotService:
         command = _parse_score_command(text)
         if command is None:
             if text.startswith("/score"):
-                return "Invalid score. Use: /score G1 Game1 <0-10>."
+                return "Invalid score format. Use: /score G1 GameA <0-10>."
             return None
 
         group, game, score = command
@@ -58,11 +60,11 @@ class BotService:
         except Exception:
             return "Could not update Google Sheets. Please retry; use the manual sheet fallback if the problem continues."
         if not result["changed"]:
-            return f"{group} already has {score}/10 for {game}. No announcement was posted."
+            return f"No change: {group} already has {score}/10 for {game}."
         announcement = _completion_announcement(group, game, score) if result["is_first_score"] else _correction_announcement(group, game, result["previous_score"], score)
         await self.publisher.publish(self.announcement_chat_id, announcement, pin=False)
         await self.publisher.publish(self.announcement_chat_id, _leaderboard_announcement(standings), pin=True)
-        return f"Score recorded for {group} in {game}: {score}/10."
+        return f"✅ Score recorded\n{group} · {game} · {score}/10"
 
 
 def _parse_score_command(text):
@@ -83,26 +85,28 @@ def _command_for_this_bot(text, bot_username):
     suffix = f"@{bot_username}".lower()
     if command.lower().endswith(suffix):
         return command[:-len(suffix)] + separator + rest
+    if "@" in command:
+        return None
     return text
 
 
 def _completion_announcement(group, game, score):
-    return f"🎉 <b>Game complete!</b>\n\n<b>{group}</b> has completed <i>{game}</i>\nScore awarded: <b>{score} / 10</b>"
+    return f"🎉 <b>{game} complete!</b>\n\n<b>Group</b> · {group}\n<b>Score</b> · {score} / 10"
 
 
 def _correction_announcement(group, game, previous_score, score):
-    return f"✏️ <b>{group}</b>'s <i>{game}</i> score was updated: <b>{previous_score} → {score} / 10</b>."
+    return f"✏️ <b>Score corrected</b>\n\n<b>Group</b> · {group}\n<b>Game</b> · {game}\n<b>Score</b> · {previous_score} → {score} / 10"
 
 
 def _leaderboard_announcement(standings):
     ordered = sorted(standings, key=lambda standing: (-standing["total"], standing["group"]))
     previous_total = None
     rank = 0
-    lines = ["🏆 <b>Leaderboard</b>", ""]
+    lines = ["🏆 <b>Leaderboard</b>", "<i>Live scores</i>", ""]
     for index, standing in enumerate(ordered, start=1):
         if standing["total"] != previous_total:
             rank = index
         previous_total = standing["total"]
         prefix = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, f"{rank}.")
-        lines.append(f"{prefix} <b>{standing['group']}</b> — <b>{standing['total']}</b>")
+        lines.append(f"{prefix} <b>{standing['group']}</b> · <b>{standing['total']}</b>")
     return "\n".join(lines)
