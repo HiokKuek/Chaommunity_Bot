@@ -1,0 +1,1 @@
+"""Orientation scoring Telegram bot."""
